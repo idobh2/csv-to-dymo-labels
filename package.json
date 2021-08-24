@@ -1,0 +1,16 @@
+{
+	"name": "csv-to-dymo-labels",
+	"version": "1.0.0",
+	"description": "Automation from Dymo label printer - Create labels from CSV input",
+	"main": "index.js",
+	"scripts": {},
+	"author": "idobh2",
+	"license": "MIT",
+	"dependencies": {
+		"@types/node-fetch": "^2.5.12",
+		"csv": "^5.5.0",
+		"dymojs": "^1.2.0",
+		"node-fetch": "^2.6.1",
+		"xml2js": "^0.4.23"
+	}
+}
