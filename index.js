@@ -5,8 +5,23 @@ const path = require("path");
 const fetch = require("node-fetch");
 const { parseStringPromise } = require("xml2js");
 const csv = require("csv");
-
-const DRY_RUN = true;
+const yargs = require('yargs/yargs')
+const { hideBin } = require('yargs/helpers')
+const { argv } = yargs(hideBin(process.argv))
+	.option("from", {
+		type: "number",
+		description: "Line number in CSV to start from",
+	})
+	.option("to", {
+		type: "number",
+		description: "Line number in CSV to read to",
+	})
+	.option("dryRun", {
+		alias: "dry-run",
+		type: "boolean",
+		description: "Render labels to output folder",
+		default: true,
+	});
 
 const getImagesDictionary = async () => {
 	const images = await fs.readFile(path.resolve(__dirname, "input/images.csv"), "utf8");
@@ -37,7 +52,8 @@ const getLabelPairs = async () => {
 	const labels = await fs.readFile(path.resolve(__dirname, "input/labels.csv"), "utf8");
 	const labelsTable = await promisify(csv.parse)(labels, {
 		columns: ["type", "value", "image"],
-		from: 2,
+		from: argv.from || 2,
+		...(argv.to ? { to: argv.to } : {})
 	});
 	const pairs = [];
 	while (labelsTable.length) {
@@ -95,7 +111,7 @@ const templateToLabel = (template, pair, images) => {
 	let templateXml = await fs.readFile("./template.dymo", "utf8");
 	for (const pair of labels) {
 		const label = templateToLabel(templateXml, pair, images);
-		if (DRY_RUN) {
+		if (argv.dryRun) {
 			const buffer = await dymo.renderLabel(label);
 			await fs.writeFile(path.resolve(__dirname, "output", `label_${labels.indexOf(pair)}.png`), buffer, "base64");
 		} else if (printerName) {
@@ -104,4 +120,5 @@ const templateToLabel = (template, pair, images) => {
 			throw new Error("Couldn't find a printer, and not in dry-run mode");
 		}
 	}
+	console.log("done");
 })().catch(console.error);
